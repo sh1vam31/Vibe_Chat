@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>form</title>
+</head>
+<body>
+    <label for="fname">First Name</label>
+    <input type="text" id="fname">
+    <label for="sname"> Second Name</label>
+    <input type="text" id="sname">
+    <label for="email"> Email</label>
+    <input type="email" name="" id="email">
+    <label for="pass">Password</label>
+    <input type="password" id="pass">
+    <input type="submit" id="btn" placeholder="submit" onclick="getdata()">
+</body>
+<script>
+    let fname = document.getElementById("fname");
+    let sname = document.getElementById("sname");
+    let email = document.getElementById("email");
+    let pass = document.getElementById("pass");
+
+    function getdata(){
+        console.log(fname.value);
+        console.log(sname.value);
+        console.log(email.value);
+        console.log(pass.value);
+
+        localStorage.setItem('fname' , fname.value);
+        localStorage.setItem('sname' , sname.value);
+        localStorage.setItem('email' , email.value);
+        localStorage.setItem('pass' , pass.value);
+        /// sessionstoreg
+        sessionStorage.setItem('fname' , fname.value);
+        sessionStorage.setItem('sname' , sname.value);
+        sessionStorage.setItem('email' , email.value);
+        sessionStorage.setItem('pass' , pass.value);
+        // localstoreg
+        console.log(localStorage.getItem('fname'));
+        console.log(localStorage.getItem('sname'));
+        console.log(localStorage.getItem('email'));
+        console.log(localStorage.getItem('pass'));
+
+        localStorage.removeItem('fname');
+        localStorage.clear();
+
+    }
+
+</script>
+</html>
