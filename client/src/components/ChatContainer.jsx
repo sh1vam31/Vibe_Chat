@@ -62,7 +62,7 @@ const ChatContainer = ({selectedUser,setSelectedUser}) => {
     </div>
 
   ):
-  <div className='flex flex-col items-center justify-center gap-2 text-gray-500'>
+  <div className='flex flex-col items-center justify-center gap-2 text-gray-300'>
     <img src={assets.logo_icon} alt="" className='max-w-16' />
     <p className='text-lg font-medium text-white'>🤘Where Vibes Connect, Conversations Begin.🤘</p>
   </div>

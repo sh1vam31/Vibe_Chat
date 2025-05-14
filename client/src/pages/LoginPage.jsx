@@ -25,7 +25,7 @@ const LoginPage = () => {
     <div className='min-h-screen bg-cover bg-center flex items-center justify-center gap-8 sm:justify-evenly max-sm:flex-col backdrop-blur-2xl'>
 
         {/* ---------left--------- */}
-        <img src={assets.logo_icon} alt="" className='w-[min(30vw,250px)]' />
+        <img src={assets.logo_icon} alt="" className='w-[min(30vw,250px)] max-w-44 aspect-square  mx-10 max-sm:mt-10 transition-transform duration-300 ease-in-out hover:scale-150 hover:rotate-1 hover:shadow-xl ' />
 
         {/* ---------- Right ----------- */}
         
