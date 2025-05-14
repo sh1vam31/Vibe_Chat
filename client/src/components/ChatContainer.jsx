@@ -25,7 +25,7 @@ const ChatContainer = ({selectedUser,setSelectedUser}) => {
         <img src={assets.help_icon} alt="" className='max-md:hidden max-w-5' />     
      </div>
 
-       {/* ---------- Chat area ---------- */}
+       {/* ---------- Chat area ---------- */} 
 
        <div className='flex flex-col h-[calc(100%-120px)] overflow-y-scroll p-3 pb-6' >
 

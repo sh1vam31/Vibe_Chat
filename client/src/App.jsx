@@ -8,7 +8,7 @@ const App = () => {
   return (
     <div className="bg-[url('./assets/background5.jpg')] bg-contain">
        {/* setting routes for every pages */}
-
+       
       <Routes>
        <Route path='/' element={<ChatPage/>} />
        <Route path='/login' element={<LoginPage/>} />
