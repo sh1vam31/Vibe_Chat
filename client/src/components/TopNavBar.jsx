@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { MessageSquare, Ghost		, Mic } from 'lucide-react';
 
 const navItems = [
-  { label: 'Chat', path: '/chatpage', icon: <MessageSquare /> },
+  { label: 'Chat Room', path: '/', icon: <MessageSquare /> },
   { label: 'Vibe Room', path: '/viberoom', icon: <Ghost /> },
 
 ];
