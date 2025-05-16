@@ -1,7 +1,11 @@
-import React, { useState } from 'react'
+import React, { useContext, useState } from 'react'
 import assets from '../assets/assets'
+import { AuthContext } from '../../context/AuthContext'
+// import { useNavigate } from 'react-router-dom';
 
 const LoginPage = () => {
+
+    // const navigate = useNavigate(); 
 
     const [currState,setCurrState] = useState("Sign up")
     const [fullName,setfullName] = useState("")
@@ -10,15 +14,28 @@ const LoginPage = () => {
     const [bio,setBio] = useState("")
     const [isDataSubmitted,setIsDataSubmitted] = useState(false)
 
-    const onSubmitHandler = (event) => {
+    const {login} = useContext(AuthContext)
+
+    const onSubmitHandler = async (event) => {
      event.preventDefault();
 
      if(currState === 'Sign up' && !isDataSubmitted){
         setIsDataSubmitted(true)
         return;
      }
+      try {
+      await login(currState === 'Sign up' ? 'signup' : 'login', {
+        fullName,
+        email,
+        password,
+        bio,
+      });
 
-
+    //   navigate('/'); // ✅ Step 3: Navigate after successful login/signup
+    } catch (error) {
+      console.error('Login error:', error.message);
+      // optionally show error message to user
+    }
     }
     
   return (
@@ -55,7 +72,8 @@ const LoginPage = () => {
         )}  
         {
             currState === "Sign up" && isDataSubmitted && (
-                <textarea rows={4} className='p-2 border border-gray-500 rounded-md focus:outline-none focus:rinf-2 focus:ring-indigo-500'></textarea>
+                <textarea onChange={ (e)=> setBio(e.target.value)} value={bio}
+                 rows={4} className='p-2 border border-gray-500 rounded-md focus:outline-none focus:rinf-2 focus:ring-indigo-500'></textarea>
             )
         }  
         <button type="submit" className='py-3 bg-gradient-to-r from-purple-400 to-violet-600 text-white rounded-md cursor-pointer' >

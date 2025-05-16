@@ -8,7 +8,7 @@ import bcrypt from 'bcryptjs';
 // SignUp a new user
 
 
-export const signup = async ()=>{
+export const signup = async (req,res)=>{
     const {fullName,email,password,bio} = req.body;
 
     try{
@@ -83,7 +83,7 @@ export const updateprofile = async (req,res)=>{
         }else{
             const upload = await cloudinary.uploader.upload(profilePic);
 
-            updatedUser = await User.findByIdAndUpdated(userId,{profilePic:upload.secure_url,bio,fullName},{new:true});
+            updatedUser = await User.findByIdAndUpdate(userId,{profilePic:upload.secure_url,bio,fullName},{new:true});
         }
         res.json({success:true,user:updatedUser})
     }catch(error){

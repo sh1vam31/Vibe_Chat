@@ -1,18 +1,34 @@
-import React, { useState } from 'react'
+import React, { useContext, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import assets from '../assets/assets'
+import { AuthContext } from '../../context/AuthContext'
 
 
 const ProfilePage = () => {
 
+  const {authUser,updateProfile}=useContext(AuthContext)
+
     const [selectedImg,setSelectedImg] = useState(null)
     const navigate = useNavigate()
-    const [name,setName] = useState("BAT")
-    const [bio,setBio] = useState("")
+    const [name,setName] = useState(authUser.fullName)
+    const [bio,setBio] = useState(authUser.bio)
 
     const handleSubmit = async (e)=>{
         e.preventDefault();
-        navigate('/')
+        if(!selectedImg){
+          await updateProfile({fullName:name,bio})
+           navigate('/');
+           return
+        }
+
+        const reader = new FileReader();
+        reader.readAsDataURL(selectedImg);
+        reader.onload=async()=>{
+          const base64Image = reader.result;
+          await updateProfile({profilePic:base64Image,fullName:name,bio});
+          navigate('/') 
+        }
+       
     }
 
   return (
@@ -37,10 +53,11 @@ const ProfilePage = () => {
 
            <button type='submit' className='bg-gradient-to-r from-purple-400 to-violet-600 text-white p-2 rounded-full text-lg cursor-pointer' >Save</button>
         </form>
-        <img className='max-w-44 aspect-square rounded-full mx-10 max-sm:mt-10 transition-transform duration-300 ease-in-out hover:scale-110 hover:rotate-1 hover:shadow-2xl' src={assets.logo_icon} alt="" />
+        <img className={` max-w-44 aspect-square rounded-full mx-10 max-sm:mt-10 transition-transform duration-300 ease-in-out hover:scale-110 hover:rotate-1 hover:shadow-2xl  ${selectedImg && 'rounded-full'} `} src={assets.logo_icon} alt="" />
      </div>
     </div>
   )
 }
 
 export default ProfilePage
+
