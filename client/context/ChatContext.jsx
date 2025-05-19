@@ -64,13 +64,15 @@ export const ChatProvider = ({ children })=>{
 
         socket.on("newMessage",(newMessage)=>{
             if(selectedUser && newMessage.senderId === selectedUser._id){
-                newMessage.seen=true;
-                setMessages((prevMessages)=>[...prevMessages,newMessage]);
-                axios.put(`.api/message/mark/${newMessage._id}`)
-            }else{
-              setUnseenMessages((prevUnseenMessages)=>({
-                ...prevUnseenMessages,[newMessage.senderId] : prevUnseenMessages[newMessage.senderId]?prevUnseenMessages[newMessage.senderId]+1 :1
-              }))
+                newMessage.seen = true;
+                setMessages(prev => [...prev, newMessage]);
+                // Fix: Correct API endpoint
+                axios.get(`/api/messages/mark/${newMessage._id}`);
+            } else {
+                setUnseenMessages(prev => ({
+                    ...prev,
+                    [newMessage.senderId]: (prev[newMessage.senderId] || 0) + 1
+                }));
             }
         })
     }
