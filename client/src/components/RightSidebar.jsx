@@ -23,13 +23,21 @@ const RightSidebar = () => {
   return selectedUser && (
     <div className={`bg-[#8185B2]/10 text-white w-full relative overflow-y-scroll ${selectedUser ? "max-md:hidden":""} `}>
       <div className='pt-16 flex flex-col items-center gap-2 text-xs font-light mx-auto'>
-        <img src={selectedUser? selectedUser.profilePic : assets.avatar_icon} alt="" className='w-30  aspect-[1/1] rounded-full' />
-        <h1 className='px-10 text-xl font-medium mx-auto flex items-center gap-2  '>
-           {onlineUsers.includes(selectedUser._id) &&  <p className='w-2 h-2 rounded-full bg-green-500'></p>}
-            {selectedUser.fullName}
-            </h1>
-            <p className='px-10 mx-auto text-white'>{selectedUser.bio}</p>
-      </div>
+  <img 
+    src={selectedUser?.profilePic || assets.avatar_icon} 
+    alt="" 
+    className='w-30 aspect-[1/1] rounded-full transition-all duration-500 
+      hover:scale-110 hover:shadow-lg hover:shadow-purple-500/50
+      animate-fadeIn' 
+  />
+  <h1 className='px-10 text-xl font-medium mx-auto flex items-center gap-2 
+    transition-all duration-300 hover:scale-105'>
+    {onlineUsers.includes(selectedUser._id) && 
+      <p className='w-2 h-2 rounded-full bg-green-500 animate-pulse'></p>
+    }
+    {selectedUser.fullName}
+  </h1>
+</div>
 
       <hr className='border-[#fffffff50] my-4'/>
      <div className='px-5 text-xs' >
