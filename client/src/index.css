@@ -10,3 +10,19 @@
 ::-webkit-scrollbar{
   display: none;
 }
+
+@keyframes zoom-move {
+  0% {
+    transform: scale(1) translateY(0);
+  }
+  50% {
+    transform: scale(1.2) translateY(-20px);
+  }
+  100% {
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-zoom-move {
+  animation: zoom-move 5s infinite ease-in-out;
+}
