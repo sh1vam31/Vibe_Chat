@@ -46,25 +46,41 @@ const Sidebar = () => {
         </div >
 
         <div className='flex flex-col'>
-            {filteredUsers.map( (user,index)=>(
-                <div onClick={ ()=>{setSelectedUser(user); setUnseenMessages(prev=>({...prev,[user._id]:0}))} } 
-                 key={index} className={`relative flex items-center gap-2 p-2 pl-4 rounded cursor-pointer max-sm:test-sm ${selectedUser?.id === user._id && 'bg-[#282142]/50'} `}>
-                <img src={user?.profilePic || assets.avatar_icon} alt="" 
-                className='w-[35px] aspect-[1/1] rounded-full '/>    
-                <div className='flex flex-col leading-5'>
-                    <p>{user.fullName}</p>
-                    {
-                       onlineUsers.includes(user._id)
-                        ? <span className='text-green-400 text-xs' >Online</span>
-                        :<span className='text-neutral-400 text-xs'>Offline</span>
-                    }
-
-                </div>
-                {unseenMessages[user._id] > 0 && <p className='absolute top-4 right-4 text-xs h-5 w-5 flex justify-center items-center rounded-full bg-violet-500/50'>{unseenMessages[user._id]} </p>
-                
-                }
-                 </div>
-            ))}
+        {filteredUsers.map((user, index) => (
+    <div 
+        onClick={() => {
+            setSelectedUser(user); 
+            setUnseenMessages(prev => ({...prev, [user._id]: 0}));
+        }} 
+        key={index} 
+        className={`relative flex items-center gap-2 p-2 pl-4 rounded-lg cursor-pointer 
+            max-sm:text-sm transition-all duration-300 ease-in-out
+            hover:bg-purple-500/20 hover:scale-105 hover:shadow-lg
+            ${selectedUser?._id === user._id ? 'bg-[#282142]/50 scale-105' : ''}`}
+    >
+        <img 
+            src={user?.profilePic || assets.avatar_icon} 
+            alt="" 
+            className='w-[35px] aspect-[1/1] rounded-full transition-transform duration-300 hover:scale-110'
+        />    
+        <div className='flex flex-col leading-5'>
+            <p className="font-medium hover:text-purple-400 transition-colors">{user.fullName}</p>
+            <span className={`text-xs transition-colors duration-300 ${
+                onlineUsers.includes(user._id) 
+                    ? 'text-green-400' 
+                    : 'text-neutral-400'
+            }`}>
+                {onlineUsers.includes(user._id) ? 'Online' : 'Offline'}
+            </span>
+        </div>
+        {unseenMessages[user._id] > 0 && (
+            <div className='absolute top-4 right-4 text-xs h-5 w-5 flex justify-center items-center rounded-full bg-violet-500/50 
+                animate-pulse transition-transform duration-300 hover:scale-110'>
+                {unseenMessages[user._id]}
+            </div>
+        )}
+    </div>
+))}
 
         </div>
 
