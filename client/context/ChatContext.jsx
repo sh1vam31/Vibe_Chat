@@ -12,7 +12,7 @@ export const ChatProvider = ({ children })=>{
     const [selectedUser,setSelectedUser] = useState(null)
     const [unseenMessages,setUnseenMessages]= useState({})
 
-    const {socket,axios} = useContext(AuthContext);
+    const {socket,axios,authUser} = useContext(AuthContext);
 
     //function to get all users for sidebar
 
@@ -59,10 +59,10 @@ export const ChatProvider = ({ children })=>{
 
     //function to subscribe to messages for selected user
 
-    const subscribeToMessages = async ()=>{
+    const subscribeToMessages = async () => {
         if(!socket) return;
 
-        socket.on("newMessage",(newMessage)=>{
+        socket.on("newMessage", (newMessage)=>{
             if(selectedUser && newMessage.senderId === selectedUser._id){
                 newMessage.seen = true;
                 setMessages(prev => [...prev, newMessage]);
@@ -74,7 +74,13 @@ export const ChatProvider = ({ children })=>{
                     [newMessage.senderId]: (prev[newMessage.senderId] || 0) + 1
                 }));
             }
-        })
+        });
+
+        socket.on("messageDeleted", ({messageId, deleteFor}) => {
+            if(deleteFor === 'everyone') {
+                setMessages(prev => prev.filter(msg => msg._id !== messageId));
+            }
+        });
     }
 
     // function to unsubscribe from messages
@@ -88,9 +94,37 @@ export const ChatProvider = ({ children })=>{
         return ()=> unsubscribeFromMessage();
      },[socket,selectedUser])
 
-    const value={
-        messages,users,selectedUser,getUsers,getMessages,sendMessage,setSelectedUser,unseenMessages,setUnseenMessages
+     // Add this function in the ChatProvider component
 
+const deleteMessage = async (messageId, deleteFor) => {
+    try {
+        console.log('Deleting message:', { messageId, deleteFor }); // Debug log
+        
+        const { data } = await axios.delete(`/api/messages/${messageId}`, {
+            data: { deleteFor } // Send deleteFor in request body
+        });
+
+        if (data.success) {
+            if (deleteFor === 'everyone') {
+                setMessages(prev => prev.filter(msg => msg._id !== messageId));
+            } else {
+                setMessages(prev => prev.map(msg => 
+                    msg._id === messageId 
+                        ? {...msg, deletedFor: [...(msg.deletedFor || []), authUser._id]}
+                        : msg
+                ));
+            }
+            toast.success(`Message deleted ${deleteFor === 'everyone' ? 'for everyone' : 'for you'}`);
+        }
+    } catch (error) {
+        console.error('Delete error:', error);
+        toast.error(error.message || 'Failed to delete message');
+    }
+};
+
+    // Add deleteMessage to the context value
+    const value={
+        messages,users,selectedUser,getUsers,getMessages,sendMessage,setSelectedUser,unseenMessages,setUnseenMessages,deleteMessage // Add this
     }
 
     return(

@@ -101,3 +101,37 @@ export const sendMessage = async (req,res)=>{
     }
 }
 
+// Add this function at the bottom of the file
+
+export const deleteMessage = async (req, res) => {
+    try {
+        const { messageId } = req.params;
+        const { deleteFor } = req.body; // Changed from req.query to req.body
+        const userId = req.user._id;
+
+        console.log('Delete params:', { messageId, deleteFor, userId }); // Debug log
+
+        const message = await Message.findById(messageId);
+        
+        if (!message) {
+            return res.status(404).json({ success: false, message: "Message not found" });
+        }
+
+        if (deleteFor === 'everyone') {
+            if (message.senderId.toString() !== userId.toString()) {
+                return res.status(403).json({ success: false, message: "Unauthorized" });
+            }
+            await Message.findByIdAndDelete(messageId);
+        } else {
+            await Message.findByIdAndUpdate(messageId, {
+                $addToSet: { deletedFor: userId }
+            });
+        }
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Delete error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
