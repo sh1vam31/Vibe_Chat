@@ -5,6 +5,7 @@ import { ChatContext } from '../../context/ChatContext'
 import { AuthContext } from '../../context/AuthContext'
 import toast from 'react-hot-toast'
 import { Trash2 } from 'lucide-react'; // Add this import
+import { formatDateForGrouping } from "../utils/formatDate";
 
 const ChatContainer = () => {
 
@@ -54,6 +55,26 @@ const ChatContainer = () => {
     }
   },[messages])
 
+  // Filter and group messages by date
+  const groupMessagesByDate = (messages) => {
+    // Filter out deleted messages first
+    const filteredMessages = messages.filter(msg => 
+        !msg.deletedFor?.includes(authUser._id)
+    );
+    
+    const groups = {};
+    
+    filteredMessages.forEach(msg => {
+        const date = formatDateForGrouping(msg.createdAt);
+        if (!groups[date]) {
+            groups[date] = [];
+        }
+        groups[date].push(msg);
+    });
+    
+    return groups;
+};
+
   return selectedUser? (
     <div className='h-full overflow-y-scroll relative backdrop-blur-lg ' > 
      
@@ -70,99 +91,105 @@ const ChatContainer = () => {
 
        {/* ---------- Chat area ---------- */} 
 
-       <div className='flex flex-col h-[calc(100%-120px)] overflow-y-scroll p-3 pb-6' >
+       <div className='flex flex-col h-[calc(100%-120px)] overflow-y-scroll p-3 pb-6'>
 
-         {messages.map( (msg,index)=> {
-            // Skip messages that are deleted for current user
-            if (msg.deletedFor?.includes(authUser._id)) return null;
-            
-            return (
-                <div 
-                    key={index} 
-                    className={`group flex items-end gap-2 justify-end relative ${
-                        msg.senderId !== authUser._id && 'flex-row-reverse'
-                    }`}
-                    onMouseLeave={() => setShowDeleteOptions(null)}
-                >
-                    {msg.image ? (
-                        <div className="relative">
-                            <img 
-                                src={msg.image} 
-                                alt="" 
-                                className='max-w-[230px] border border-gray-700 rounded-lg overflow-hidden mb-8' 
-                            />
-                            {/* Delete icon */}
-                            <Trash2 
-                                className="hidden group-hover:block absolute top-0 right-0 w-4 h-4 
-                                    cursor-pointer text-red-500 hover:text-red-600"
-                                onClick={() => setShowDeleteOptions(msg._id)}
-                            />
-                        </div>
-                    ) : (
-                        <div className="relative">
-                            <p className={`p-2 max-w-[200px] md:text-sm font-light rounded-lg mb-8 
-                                break-all bg-violet-500/30 text-white ${
-                                    msg.senderId === authUser._id ? 'rounded-br-none' : 'rounded-bl-none'
-                                }`
-                            }
-                            >
-                                {msg.text}
-                            </p>
-                            {/* Delete icon */}
-                            <Trash2 
-                                className="hidden group-hover:block absolute top-0 right-0 w-4 h-4 
-                                    cursor-pointer text-red-500 hover:text-red-600"
-                                onClick={() => setShowDeleteOptions(msg._id)}
-                            />
-                        </div>
-                    )}
-                    
-                    {/* Delete options popup */}
-                    {showDeleteOptions === msg._id && (
-                        <div className={`absolute ${
-        msg.senderId === authUser._id 
-            ? 'right-0' 
-            : 'left-0'
-        } top-0 bg-gray-800 rounded-lg shadow-lg p-2 z-10`}
-    >
-        <button 
-            className="block w-full text-left px-4 py-2 text-sm text-white 
-                hover:bg-gray-700 rounded"
-            onClick={() => {
-                deleteMessage(msg._id, 'me');
-                setShowDeleteOptions(null);
-            }}
+         {Object.entries(groupMessagesByDate(messages)).map(([date, dateMessages]) => (
+            <div key={date} className="mb-6">
+                <div className="flex justify-center mb-4">
+                    <span className="bg-gray-800 text-gray-300 text-xs px-4 py-1 rounded-full">
+                        {date}
+                    </span>
+                </div>
+                
+                {dateMessages.map((msg, index) => (
+                    // Remove the deleted message check since we already filtered them
+                    <div 
+                        key={index} 
+                        className={`group flex items-end gap-2 justify-end relative ${
+                            msg.senderId !== authUser._id && 'flex-row-reverse'
+                        }`}
+                        onMouseLeave={() => setShowDeleteOptions(null)}
+                    >
+                        {msg.image ? (
+                            <div className="relative">
+                                <img 
+                                    src={msg.image} 
+                                    alt="" 
+                                    className='max-w-[230px] border border-gray-700 rounded-lg overflow-hidden mb-8' 
+                                />
+                                {/* Delete icon */}
+                                <Trash2 
+                                    className="hidden group-hover:block absolute top-0 right-0 w-4 h-4 
+                                        cursor-pointer text-red-500 hover:text-red-600"
+                                    onClick={() => setShowDeleteOptions(msg._id)}
+                                />
+                            </div>
+                        ) : (
+                            <div className="relative">
+                                <p className={`p-2 max-w-[200px] md:text-sm font-light rounded-lg mb-8 
+                                    break-all bg-violet-500/30 text-white ${
+                                        msg.senderId === authUser._id ? 'rounded-br-none' : 'rounded-bl-none'
+                                    }`
+                                }
+                                >
+                                    {msg.text}
+                                </p>
+                                {/* Delete icon */}
+                                <Trash2 
+                                    className="hidden group-hover:block absolute top-0 right-0 w-4 h-4 
+                                        cursor-pointer text-red-500 hover:text-red-600"
+                                    onClick={() => setShowDeleteOptions(msg._id)}
+                                />
+                            </div>
+                        )}
+                        
+                        {/* Delete options popup */}
+                        {showDeleteOptions === msg._id && (
+                            <div className={`absolute ${
+            msg.senderId === authUser._id 
+                ? 'right-0' 
+                : 'left-0'
+            } top-0 bg-gray-800 rounded-lg shadow-lg p-2 z-10`}
         >
-            Delete for me
-        </button>
-        {msg.senderId === authUser._id && (
             <button 
                 className="block w-full text-left px-4 py-2 text-sm text-white 
                     hover:bg-gray-700 rounded"
                 onClick={() => {
-                    deleteMessage(msg._id, 'everyone');
+                    deleteMessage(msg._id, 'me');
                     setShowDeleteOptions(null);
                 }}
             >
-                Delete for everyone
+                Delete for me
             </button>
-        )}
-    </div>
-                    )}
+            {msg.senderId === authUser._id && (
+                <button 
+                    className="block w-full text-left px-4 py-2 text-sm text-white 
+                        hover:bg-gray-700 rounded"
+                    onClick={() => {
+                        deleteMessage(msg._id, 'everyone');
+                        setShowDeleteOptions(null);
+                    }}
+                >
+                    Delete for everyone
+                </button>
+            )}
+        </div>
+                        )}
 
-                    <div className='text-center text-xs'>
-                        <img 
-                            src={msg.senderId === authUser._id 
-                                ? authUser?.profilePic || assets.avatar_icon
-                                : selectedUser?.profilePic || assets.avatar_icon} 
-                            alt="" 
-                            className='w-7 rounded-full'
-                        />
-                        <p className='text-gray-500'>{formatMessageTime(msg.createdAt)}</p>
+                        <div className='text-center text-xs'>
+                            <img 
+                                src={msg.senderId === authUser._id 
+                                    ? authUser?.profilePic || assets.avatar_icon
+                                    : selectedUser?.profilePic || assets.avatar_icon} 
+                                alt="" 
+                                className='w-7 rounded-full'
+                            />
+                            <p className='text-gray-500'>{formatMessageTime(msg.createdAt)}</p>
+                        </div>
                     </div>
-                </div>
-            );
-         })}
+                ))}
+            </div>
+        ))}
          <div ref={scrollEnd} ></div>
        </div>
 
