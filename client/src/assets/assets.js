@@ -142,3 +142,6 @@ export const messagesDummyData = [
         "createdAt": "2025-04-28T10:24:08.523Z",
     }
 ]
+
+
+export { assets };

@@ -4,7 +4,7 @@ import ProfilePage from './pages/ProfilePage'
 import LoginPage from './pages/LoginPage'
 import ChatPage from './pages/ChatPage'
 import Layout from './Layout'; 
-import VibeRoom from './pages/VibeRoom'
+import VibeRoom from './components/VibeRoom';
 import {Toaster} from "react-hot-toast" 
 import { AuthContext } from '../context/AuthContext'
 
@@ -23,7 +23,7 @@ const App = () => {
         <Route element={<Layout />}>
           
           <Route path="/" element={authUser? <ChatPage />:<Navigate to="/login"/> } />
-          <Route path="/vibeRoom" element={<VibeRoom/>} />
+          <Route path="/viberoom" element={<VibeRoom />} />
             </Route>
       </Routes>
 

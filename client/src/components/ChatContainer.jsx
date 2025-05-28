@@ -6,11 +6,13 @@ import { AuthContext } from '../../context/AuthContext'
 import toast from 'react-hot-toast'
 import { Trash2 } from 'lucide-react'; // Add this import
 import { formatDateForGrouping } from "../utils/formatDate";
+import { useNavigate } from "react-router-dom";
 
 const ChatContainer = () => {
 
   const {messages,selectedUser,setSelectedUser,sendMessage,getMessages ,deleteMessage} = useContext(ChatContext);
   const { authUser , onlineUsers } = useContext(AuthContext);
+  const navigate = useNavigate();
   
   const scrollEnd = useRef()
 
@@ -212,6 +214,12 @@ const ChatContainer = () => {
   <div className='flex flex-col items-center justify-center gap-2 text-gray-300'>
     <img src={assets.logo_icon} alt="" className='max-w-16' />
     <p className='text-lg font-medium text-white'>🤘Where Vibes Connect, Conversations Begin.🤘</p>
+    <button
+      onClick={() => navigate('/viberoom')}
+      className="px-3 py-1 bg-violet-500 text-white rounded-lg hover:bg-violet-600"
+    >
+      Start VibeRoom
+    </button>
   </div>
 }
 
