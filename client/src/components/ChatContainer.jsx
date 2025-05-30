@@ -20,6 +20,8 @@ const ChatContainer = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const searchInputRef = useRef(null);
+  // Add state for confirmation dialog
+  const [confirmDelete, setConfirmDelete] = useState({ show: false, messageId: null, deleteFor: null });
 
   // Handle sending a message
   const handleSendMessage = async (e) => {
@@ -58,6 +60,20 @@ const ChatContainer = () => {
       .map((msg, idx) => ({ ...msg, idx }))
       .filter(msg => msg.text && msg.text.toLowerCase().includes(term.toLowerCase()));
     setSearchResults(results);
+  };
+
+  // Handle delete confirmation
+  const handleConfirmDelete = () => {
+    if (confirmDelete.show && confirmDelete.messageId && confirmDelete.deleteFor) {
+      deleteMessage(confirmDelete.messageId, confirmDelete.deleteFor);
+      setConfirmDelete({ show: false, messageId: null, deleteFor: null });
+      setShowDeleteOptions(null);
+    }
+  };
+
+  // Handle cancel delete
+  const handleCancelDelete = () => {
+    setConfirmDelete({ show: false, messageId: null, deleteFor: null });
   };
 
   useEffect(() => {
@@ -107,7 +123,7 @@ const ChatContainer = () => {
           className="w-5 h-5 cursor-pointer text-gray-400 hover:text-white"
           onClick={() => setShowSearch((prev) => !prev)}
         />
-        <img src={assets.help_icon} alt="" className='max-md:hidden max-w-5' />
+        
         <img onClick={() => setSelectedUser(null)} src={assets.arrow_icon} alt="" className='md:hidden max-w-7' />
       </div>
 
@@ -192,8 +208,7 @@ const ChatContainer = () => {
                         className="block w-full text-left px-4 py-2 text-sm text-white 
                       hover:bg-gray-700 rounded"
                         onClick={() => {
-                          deleteMessage(msg._id, 'me');
-                          setShowDeleteOptions(null);
+                          setConfirmDelete({ show: true, messageId: msg._id, deleteFor: 'me' });
                         }}
                       >
                         Delete for me
@@ -203,8 +218,7 @@ const ChatContainer = () => {
                           className="block w-full text-left px-4 py-2 text-sm text-white 
                           hover:bg-gray-700 rounded"
                           onClick={() => {
-                            deleteMessage(msg._id, 'everyone');
-                            setShowDeleteOptions(null);
+                            setConfirmDelete({ show: true, messageId: msg._id, deleteFor: 'everyone' });
                           }}
                         >
                           Delete for everyone
@@ -230,6 +244,33 @@ const ChatContainer = () => {
         ))}
         <div ref={scrollEnd}></div>
       </div>
+
+{/* Confirmation Dialog */}
+{confirmDelete.show && (
+  <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backdropFilter: 'blur(5px)' }}>
+    <div className="bg-gray-800 rounded-lg p-6 max-w-sm w-full">
+      <h3 className="text-xl font-semibold text-white mb-4">Delete Message</h3>
+      <p className="text-gray-300 mb-6">
+        Are you sure you want to delete this message 
+        {confirmDelete.deleteFor === 'everyone' ? ' for everyone' : ' for yourself'}?
+      </p>
+      <div className="flex justify-end gap-3">
+        <button
+          onClick={handleCancelDelete}
+          className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 transition-colors"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={handleConfirmDelete}
+          className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+        >
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
       {/* -------- Bottom Area ------- */}
       <div className="w-full fixed bottom-0 left-0 bg-gray-900 p-3 flex items-center gap-2">
