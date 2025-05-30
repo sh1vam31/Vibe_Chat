@@ -16,7 +16,7 @@ function getYouTubeEmbedUrl(url) {
 
 const VibeRoom = () => {
   const { authUser } = useContext(AuthContext);
-  const { users, sendMessage } = useContext(ChatContext);
+  const { friends, sendMessage } = useContext(ChatContext);
   const [videoUrl, setVideoUrl] = useState("");
   const [embedUrl, setEmbedUrl] = useState("");
   const [invitedUsers, setInvitedUsers] = useState([]);
@@ -137,7 +137,7 @@ const VibeRoom = () => {
           <div className="mb-4">
             <p className="mb-2 text-sm">Invite up to 5 friends:</p>
             <div className="flex flex-wrap gap-2">
-              {users
+              {friends
                 .filter(u => u._id !== authUser._id)
                 .map(user => (
                   <button
