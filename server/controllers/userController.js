@@ -100,3 +100,101 @@ export const updateprofile = async (req, res) => {
     res.json({ success: false, message: error.message });
   }
 };
+
+// Send friend request
+export const sendFriendRequest = async (req, res) => {
+  try {
+    const fromId = req.user._id;
+    const { toId } = req.body;
+    if (fromId.toString() === toId) return res.json({ success: false, message: "Cannot add yourself" });
+
+    const toUser = await User.findById(toId);
+    const fromUser = await User.findById(fromId);
+
+    if (!toUser) return res.json({ success: false, message: "User not found" });
+    if (fromUser.friends.includes(toId)) return res.json({ success: false, message: "Already friends" });
+    if (fromUser.sentRequests.includes(toId)) return res.json({ success: false, message: "Request already sent" });
+
+    fromUser.sentRequests.push(toId);
+    toUser.receivedRequests.push(fromId);
+
+    await fromUser.save();
+    await toUser.save();
+
+    res.json({ success: true, message: "Friend request sent" });
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
+
+// Accept friend request
+export const acceptFriendRequest = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { fromId } = req.body;
+
+    const user = await User.findById(userId);
+    const fromUser = await User.findById(fromId);
+
+    if (!user || !fromUser) return res.json({ success: false, message: "User not found" });
+
+    // Remove from requests
+    user.receivedRequests = user.receivedRequests.filter(id => id.toString() !== fromId);
+    fromUser.sentRequests = fromUser.sentRequests.filter(id => id.toString() !== userId.toString());
+
+    // Add to friends
+    user.friends.push(fromId);
+    fromUser.friends.push(userId);
+
+    await user.save();
+    await fromUser.save();
+
+    res.json({ success: true, message: "Friend request accepted" });
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
+
+// Reject friend request
+export const rejectFriendRequest = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { fromId } = req.body;
+
+    const user = await User.findById(userId);
+    const fromUser = await User.findById(fromId);
+
+    if (!user || !fromUser) return res.json({ success: false, message: "User not found" });
+
+    // Remove from requests
+    user.receivedRequests = user.receivedRequests.filter(id => id.toString() !== fromId);
+    fromUser.sentRequests = fromUser.sentRequests.filter(id => id.toString() !== userId.toString());
+
+    await user.save();
+    await fromUser.save();
+
+    res.json({ success: true, message: "Friend request rejected" });
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
+
+// Get social data (friends, requests, all users for search)
+export const getSocialData = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id)
+      .populate("friends", "-password")
+      .populate("sentRequests", "-password")
+      .populate("receivedRequests", "-password");
+    const allUsers = await User.find({ _id: { $ne: req.user._id } }).select("-password");
+    res.json({
+      success: true,
+      friends: user.friends,
+      sentRequests: user.sentRequests,
+      receivedRequests: user.receivedRequests,
+      allUsers
+    });
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
