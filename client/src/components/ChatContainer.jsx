@@ -13,6 +13,7 @@ const ChatContainer = () => {
   const { authUser, onlineUsers } = useContext(AuthContext);
 
   const scrollEnd = useRef()
+  const messageRefs = useRef({});
 
   const [input, setInput] = useState('')
   const [showDeleteOptions, setShowDeleteOptions] = useState(null);
@@ -22,6 +23,8 @@ const ChatContainer = () => {
   const searchInputRef = useRef(null);
   // Add state for confirmation dialog
   const [confirmDelete, setConfirmDelete] = useState({ show: false, messageId: null, deleteFor: null });
+  const [previewImage, setPreviewImage] = useState(null);
+  const [isZoomed, setIsZoomed] = useState(false);
 
   // Handle sending a message
   const handleSendMessage = async (e) => {
@@ -36,17 +39,20 @@ const ChatContainer = () => {
   const handleSendImage = async (e) => {
     const file = e.target.files[0];
     if (!file || !file.type.startsWith("image/")) {
-      toast.error("select an image file")
+      toast.error("Select an image file");
       return;
     }
     const reader = new FileReader();
-
     reader.onloadend = async () => {
-      await sendMessage({ image: reader.result })
-      e.target.value = ""
-    }
+      try {
+        await sendMessage({ image: reader.result });
+        e.target.value = "";
+      } catch (err) {
+        toast.error("Failed to send image");
+      }
+    };
     reader.readAsDataURL(file);
-  }
+  };
 
   const handleSearch = (e) => {
     const term = e.target.value;
@@ -109,12 +115,30 @@ const ChatContainer = () => {
     return groups;
   };
 
+  useEffect(() => {
+    if (searchTerm) {
+      // Flatten grouped messages for search
+      const allMessages = Object.values(groupMessagesByDate(messages)).flat();
+      const found = allMessages.find(msg =>
+        msg.text && msg.text.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      if (found && messageRefs.current[found._id]) {
+        messageRefs.current[found._id].scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  }, [searchTerm, messages]);
+
   return selectedUser ? (
     <div className='h-full overflow-y-scroll relative backdrop-blur-lg ' >
 
       {/* ------- Header ------- */}
       <div className='flex items-center gap-3 py-3 mx-4 border-b border-stone-500'>
-        <img src={selectedUser.profilePic || assets.avatar_icon} alt="" className='w-8 rounded-full' />
+        <img
+          src={selectedUser.profilePic || assets.avatar_icon}
+          alt=""
+          className='w-8 rounded-full cursor-pointer'
+          onClick={() => setPreviewImage(selectedUser.profilePic || assets.avatar_icon)}
+        />
         <p className='flex-1 text-lg text-white flex items-center gap-2' >
           {selectedUser.fullName}
           {onlineUsers.includes(selectedUser._id) && <span className='w-2 h-2 rounded-full bg-green-500'></span>}
@@ -155,20 +179,27 @@ const ChatContainer = () => {
 
             {dateMessages.map((msg, index) => {
               const isMatch = searchTerm && msg.text && msg.text.toLowerCase().includes(searchTerm.toLowerCase());
+              // Check if previous message is also an image
+              const prevMsg = dateMessages[index - 1];
+              const isPrevImage = prevMsg && prevMsg.image;
+              const imageMarginClass = msg.image && isPrevImage ? "mt-4" : "";
+            
               return (
                 <div
-                  key={index}
+                  key={msg._id || index}
+                  ref={el => messageRefs.current[msg._id || index] = el}
                   className={`group flex items-end gap-2 justify-end relative ${
                     msg.senderId !== authUser._id && 'flex-row-reverse'
-                  } ${isMatch ? 'bg-yellow-200/20 border-l-4 border-yellow-400' : ''}`}
+                  } ${isMatch ? 'bg-yellow-200/20 border-l-4 border-yellow-400' : ''} ${imageMarginClass}`}
                   onMouseLeave={() => setShowDeleteOptions(null)}
                 >
                   {msg.image ? (
                     <div className="relative">
                       <img
                         src={msg.image}
-                        alt=""
-                        className='max-w-[230px] border border-gray-700 rounded-lg overflow-hidden mb-8'
+                        alt="Sent/Received"
+                        className="w-40 h-40 object-cover rounded-lg cursor-pointer"
+                        onClick={() => { setPreviewImage(msg.image); setIsZoomed(false); }}
                       />
                       {/* Delete icon */}
                       <Trash2
@@ -272,6 +303,29 @@ const ChatContainer = () => {
   </div>
 )}
 
+{previewImage && (
+  <div
+    className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50"
+    onClick={() => { setPreviewImage(null); setIsZoomed(false); }}
+  >
+    <div className="relative" onClick={e => e.stopPropagation()}>
+      <img
+        src={previewImage}
+        alt="Large Preview"
+        className={`rounded-lg shadow-lg transition-transform duration-200 ${isZoomed ? "scale-150 cursor-zoom-out" : "scale-100 cursor-zoom-in"} max-w-full max-h-[80vh]`}
+        onClick={() => setIsZoomed(z => !z)}
+        style={{ objectFit: "contain" }}
+      />
+      <button
+        className="absolute top-2 right-2 bg-white rounded-full p-1 shadow"
+        onClick={() => { setPreviewImage(null); setIsZoomed(false); }}
+      >
+        <span className="text-black text-lg font-bold">&times;</span>
+      </button>
+    </div>
+  </div>
+)}
+
       {/* -------- Bottom Area ------- */}
       <div className="w-full fixed bottom-0 left-0 bg-gray-900 p-3 flex items-center gap-2">
         {/* Image upload button */}
@@ -289,6 +343,11 @@ const ChatContainer = () => {
           placeholder="Type a message..."
           value={input}
           onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              handleSendMessage(e);
+            }
+          }}
           className="flex-1 py-2 px-4 border border-gray-700 rounded-full bg-gray-800 text-white placeholder-gray-400 text-sm"
         />
         <img
