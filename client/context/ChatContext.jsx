@@ -28,9 +28,9 @@ export const ChatProvider = ({ children }) => {
     };
 
     // Send message to selected user
-    const sendMessage = async (messageData) => {
+    const sendMessage = async (messageData, receiverId) => {
         try {
-            const { data } = await axios.post(`/api/messages/send/${selectedUser._id}`, messageData);
+            const { data } = await axios.post(`/api/messages/send/${receiverId}`, messageData);
             if (data.success) {
                 setMessages((prevMessages) => [...prevMessages, data.newMessage]);
             } else {

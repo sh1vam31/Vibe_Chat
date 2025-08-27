@@ -1,10 +1,14 @@
 import { useState, useContext, useRef, useEffect } from "react";
+import { io } from "socket.io-client";
 import { AuthContext } from "../../context/AuthContext";
 import { ChatContext } from "../../context/ChatContext";
 import { assets } from "../assets/assets";
 import toast from "react-hot-toast";
 import { v4 as uuidv4 } from "uuid";
-import { useLocation, useNavigate } from "react-router-dom"; // <-- Remove useParams
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import YouTube from "react-youtube";
+
+const socket = io(import.meta.env.VITE_BACKEND_URL);
 
 function getYouTubeEmbedUrl(url) {
   const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
@@ -12,11 +16,11 @@ function getYouTubeEmbedUrl(url) {
   return match && match[2].length === 11
     ? `https://www.youtube.com/embed/${match[2]}`
     : null;
-} 
+}
 
 const VibeRoom = () => {
   const { authUser } = useContext(AuthContext);
-  const { friends, sendMessage } = useContext(ChatContext);
+  const { friends, sendMessage: contextSendMessage } = useContext(ChatContext);
   const [videoUrl, setVideoUrl] = useState("");
   const [embedUrl, setEmbedUrl] = useState("");
   const [invitedUsers, setInvitedUsers] = useState([]);
@@ -25,17 +29,33 @@ const VibeRoom = () => {
   const scrollEnd = useRef(null);
   const location = useLocation();
   const navigate = useNavigate();
+  const { roomId } = useParams();
+  const playerRef = useRef();
   const videoParam = new URLSearchParams(location.search).get("video");
 
   useEffect(() => {
-    if (scrollEnd.current) {
-      scrollEnd.current.scrollIntoView({ behavior: "smooth" });
+    if (videoParam) {
+      setVideoUrl(videoParam);
+      setEmbedUrl(getYouTubeEmbedUrl(videoParam));
     }
-  }, [liveChat]);
+  }, [videoParam]);
 
   useEffect(() => {
-    if (videoParam) setVideoUrl(videoParam);
-  }, [videoParam]);
+    if (roomId) {
+      socket.emit("join-viberoom", roomId);
+    }
+    // Listen for video actions
+    socket.on("video-action", ({ action, time }) => {
+      if (!playerRef.current) return;
+      const ytPlayer = playerRef.current.internalPlayer;
+      if (action === "play") ytPlayer.playVideo();
+      if (action === "pause") ytPlayer.pauseVideo();
+      if (action === "seek") ytPlayer.seekTo(time, true);
+    });
+    return () => {
+      socket.off("video-action");
+    };
+  }, [roomId]);
 
   const handleInviteUser = (user) => {
     if (invitedUsers.includes(user._id)) return;
@@ -64,25 +84,25 @@ const VibeRoom = () => {
     toast.success("VibeRoom started! Enjoy together.");
 
     // Generate a unique room ID
-    const roomId = uuidv4();
+    const newRoomId = uuidv4();
 
     // Send an invite message to each invited user
     for (const userId of invitedUsers) {
-      await sendMessage({
+      await contextSendMessage({
         text: JSON.stringify({
           type: "viberoom-invite",
           from: authUser._id,
           fromName: authUser.fullName,
           to: userId,
           videoUrl,
-          roomId,
+          roomId: newRoomId,
         }),
         image: "",
-      }, userId);
+      }, userId); // <-- Pass userId here!
     }
 
     // Navigate the creator to the room
-    navigate(`/viberoom/${roomId}?video=${encodeURIComponent(videoUrl)}`);
+    navigate(`/viberoom/${newRoomId}?video=${encodeURIComponent(videoUrl)}`);
   };
 
   const handleSendLiveChat = () => {
@@ -94,6 +114,26 @@ const VibeRoom = () => {
     }]);
     setChatInput("");
   };
+
+  // Emit video actions
+  const handlePlayerStateChange = (event) => {
+    if (!roomId) return;
+    const ytPlayer = event.target;
+    const state = ytPlayer.getPlayerState();
+    const time = ytPlayer.getCurrentTime();
+    if (state === 1) socket.emit("video-action", { roomId, action: "play", time });
+    if (state === 2) socket.emit("video-action", { roomId, action: "pause", time });
+  };
+
+  const handlePlayerSeek = (event) => {
+    if (!roomId) return;
+    const ytPlayer = event.target;
+    const time = ytPlayer.getCurrentTime();
+    socket.emit("video-action", { roomId, action: "seek", time });
+  };
+
+  // Only show invite UI if NOT joining via invite link
+  const showInviteUI = !videoParam;
 
   return (
     <div className="min-h-screen bg-[#1F2937] text-white flex flex-col">
@@ -113,67 +153,77 @@ const VibeRoom = () => {
       <div className="flex-1 flex flex-col md:flex-row gap-4 p-4 overflow-hidden">
         {/* Video & Invite Section */}
         <div className="flex-1 bg-[#111827] rounded-lg p-4 flex flex-col mb-4 md:mb-0">
-          {/* YouTube Link Input & Invite */}
-          <div className="mb-4">
-            <label className="block mb-2 text-sm font-medium">Paste YouTube video URL:</label>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={videoUrl}
-                onChange={(e) => setVideoUrl(e.target.value)}
-                placeholder="https://www.youtube.com/watch?v=..."
-                className="flex-1 p-2 bg-gray-800 rounded-lg outline-none text-white"
-              />
-              <button
-                onClick={handleStartVibe}
-                className="bg-violet-500 px-4 py-2 rounded-lg hover:bg-violet-600 whitespace-nowrap"
-              >
-                Start VibeRoom
-              </button>
-            </div>
-          </div>
-          {/* Invite Users */}
-          <div className="mb-4">
-            <p className="mb-2 text-sm">Invite up to 5 friends:</p>
-            <div className="flex flex-wrap gap-2">
-              {friends
-                .filter(u => u._id !== authUser._id)
-                .map(user => (
+          {/* Only show invite UI if user is the creator */}
+          {showInviteUI && (
+            <>
+              {/* YouTube Link Input & Invite */}
+              <div className="mb-4">
+                <label className="block mb-2 text-sm font-medium">Paste YouTube video URL:</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={videoUrl}
+                    onChange={(e) => setVideoUrl(e.target.value)}
+                    placeholder="https://www.youtube.com/watch?v=..."
+                    className="flex-1 p-2 bg-gray-800 rounded-lg outline-none text-white"
+                  />
                   <button
-                    key={user._id}
-                    className={`px-3 py-1 rounded-full text-sm ${
-                      invitedUsers.includes(user._id)
-                        ? "bg-violet-500 text-white"
-                        : "bg-gray-700 text-gray-300 hover:bg-violet-700"
-                    }`}
-                    onClick={() =>
-                      invitedUsers.includes(user._id)
-                        ? handleRemoveUser(user._id)
-                        : handleInviteUser(user)
-                    }
+                    onClick={handleStartVibe}
+                    className="bg-violet-500 px-4 py-2 rounded-lg hover:bg-violet-600 whitespace-nowrap"
                   >
-                    {user.fullName}
-                    {invitedUsers.includes(user._id) && " ✓"}
+                    Start VibeRoom
                   </button>
-                ))}
-            </div>
-          </div>
+                </div>
+              </div>
+              {/* Invite Users */}
+              <div className="mb-4">
+                <p className="mb-2 text-sm">Invite up to 5 friends:</p>
+                <div className="flex flex-wrap gap-2">
+                  {friends
+                    .filter(u => u._id !== authUser._id)
+                    .map(user => (
+                      <button
+                        key={user._id}
+                        className={`px-3 py-1 rounded-full text-sm ${
+                          invitedUsers.includes(user._id)
+                            ? "bg-violet-500 text-white"
+                            : "bg-gray-700 text-gray-300 hover:bg-violet-700"
+                        }`}
+                        onClick={() =>
+                          invitedUsers.includes(user._id)
+                            ? handleRemoveUser(user._id)
+                            : handleInviteUser(user)
+                        }
+                      >
+                        {user.fullName}
+                        {invitedUsers.includes(user._id) && " ✓"}
+                      </button>
+                    ))}
+                </div>
+              </div>
+            </>
+          )}
+
           {/* Video Player */}
           <div className="flex-1 flex items-center justify-center min-h-[240px]">
             {embedUrl ? (
-              <iframe
-                width="100%"
-                height="100%"
-                src={embedUrl}
-                title="YouTube video player"
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
+              <YouTube
+                videoId={embedUrl?.split("/embed/")[1]}
+                ref={playerRef}
+                onStateChange={handlePlayerStateChange}
+                onPlaybackRateChange={handlePlayerSeek}
+                opts={{
+                  width: "100%",
+                  height: "400",
+                  playerVars: { autoplay: 0 }
+                }}
                 className="rounded-lg aspect-video w-full max-h-[60vh] bg-black"
-              ></iframe>
+              />
             ) : (
               <div className="w-full aspect-video bg-black rounded-lg flex items-center justify-center text-gray-400">
-                Paste a YouTube link and invite friends to start!
+                {showInviteUI
+                  ? "Paste a YouTube link and invite friends to start!"
+                  : "Waiting for video link..."}
               </div>
             )}
           </div>
@@ -236,7 +286,3 @@ const VibeRoom = () => {
 };
 
 export default VibeRoom;
-
-/* In your routing file, ensure you have the following route:
-<Route path="/viberoom/:roomId" element={<VibeRoom />} />
-*/

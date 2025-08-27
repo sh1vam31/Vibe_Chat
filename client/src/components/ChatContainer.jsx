@@ -7,8 +7,9 @@ import toast from 'react-hot-toast'
 import { Trash2, Search, Image as ImageIcon } from 'lucide-react'
 import { formatDateForGrouping } from "../utils/formatDate"
 
+
 const ChatContainer = () => {
-  const { messages, selectedUser, setSelectedUser, sendMessage, getMessages, deleteMessage } = useContext(ChatContext)
+  const { messages, selectedUser, setSelectedUser, sendMessage: contextSendMessage, getMessages, deleteMessage } = useContext(ChatContext)
   const { authUser, onlineUsers } = useContext(AuthContext)
   const scrollEnd = useRef()
   const [input, setInput] = useState('')
@@ -57,7 +58,7 @@ const ChatContainer = () => {
   const handleSendMessage = async (e) => {
     e.preventDefault()
     if (!input.trim()) return
-    await sendMessage({ text: input.trim() })
+    await contextSendMessage({ text: input.trim() }, selectedUser._id)
     setInput("")
   }
 
@@ -70,7 +71,7 @@ const ChatContainer = () => {
     }
     const reader = new FileReader()
     reader.onloadend = async () => {
-      await sendMessage({ image: reader.result })
+      await contextSendMessage({ image: reader.result }, selectedUser._id)
       e.target.value = ""
     }
     reader.readAsDataURL(file)
@@ -158,7 +159,6 @@ const ChatContainer = () => {
                         src={msg.image}
                         alt="Sent/Received"
                         className="w-40 h-40 object-cover rounded-lg cursor-pointer"
-                        onClick={() => { setPreviewImage(msg.image); setIsZoomed(false); }}
                       />
                       <Trash2
                         className="hidden group-hover:block absolute top-0 right-0 w-4 h-4 cursor-pointer text-red-500 hover:text-red-600"
