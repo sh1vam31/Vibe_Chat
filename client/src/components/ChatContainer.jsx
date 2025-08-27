@@ -156,8 +156,9 @@ const ChatContainer = () => {
                     <div className="relative">
                       <img
                         src={msg.image}
-                        alt=""
-                        className='max-w-[230px] border border-gray-700 rounded-lg overflow-hidden mb-8'
+                        alt="Sent/Received"
+                        className="w-40 h-40 object-cover rounded-lg cursor-pointer"
+                        onClick={() => { setPreviewImage(msg.image); setIsZoomed(false); }}
                       />
                       <Trash2
                         className="hidden group-hover:block absolute top-0 right-0 w-4 h-4 cursor-pointer text-red-500 hover:text-red-600"
@@ -259,6 +260,11 @@ const ChatContainer = () => {
           placeholder="Type a message..."
           value={input}
           onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              handleSendMessage(e);
+            }
+          }}
           className="flex-1 py-2 px-4 border border-gray-700 rounded-full bg-gray-800 text-white placeholder-gray-400 text-sm"
         />
         <img
