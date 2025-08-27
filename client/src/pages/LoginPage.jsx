@@ -22,13 +22,13 @@ const LoginPage = () => {
     }
     try {
       await login(currState === 'Sign up' ? 'signup' : 'login', {
-        fullName,
+        fullName, 
         email,
         password,
         bio,
       });
       // handle navigation after login if needed
-    } catch (err) {
+    } catch {
       // handle error (show toast or message)
     }
   };

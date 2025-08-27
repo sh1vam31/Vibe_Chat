@@ -22,8 +22,9 @@ const App = () => {
        {/* Routes with layout */}
         <Route element={<Layout />}>
           
-          <Route path="/" element={authUser? <ChatPage />:<Navigate to="/login"/> } />
+          <Route path="/" element={authUser? <ChatPage />:<Navigate to="/login"/> } /> 
           <Route path="/viberoom" element={<VibeRoom />} />
+          <Route path="/viberoom/:roomId" element={<VibeRoom />} />
             </Route>
       </Routes>
 

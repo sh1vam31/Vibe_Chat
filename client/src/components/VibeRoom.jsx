@@ -4,7 +4,7 @@ import { ChatContext } from "../../context/ChatContext";
 import { assets } from "../assets/assets";
 import toast from "react-hot-toast";
 import { v4 as uuidv4 } from "uuid";
-import { useParams, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom"; // <-- Remove useParams
 
 function getYouTubeEmbedUrl(url) {
   const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
@@ -12,7 +12,7 @@ function getYouTubeEmbedUrl(url) {
   return match && match[2].length === 11
     ? `https://www.youtube.com/embed/${match[2]}`
     : null;
-}
+} 
 
 const VibeRoom = () => {
   const { authUser } = useContext(AuthContext);
@@ -23,7 +23,6 @@ const VibeRoom = () => {
   const [liveChat, setLiveChat] = useState([]);
   const [chatInput, setChatInput] = useState("");
   const scrollEnd = useRef(null);
-  const { roomId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
   const videoParam = new URLSearchParams(location.search).get("video");
@@ -69,8 +68,8 @@ const VibeRoom = () => {
 
     // Send an invite message to each invited user
     for (const userId of invitedUsers) {
-      await sendMessage(
-        JSON.stringify({
+      await sendMessage({
+        text: JSON.stringify({
           type: "viberoom-invite",
           from: authUser._id,
           fromName: authUser.fullName,
@@ -78,8 +77,8 @@ const VibeRoom = () => {
           videoUrl,
           roomId,
         }),
-        userId
-      );
+        image: "",
+      }, userId);
     }
 
     // Navigate the creator to the room
@@ -237,3 +236,7 @@ const VibeRoom = () => {
 };
 
 export default VibeRoom;
+
+/* In your routing file, ensure you have the following route:
+<Route path="/viberoom/:roomId" element={<VibeRoom />} />
+*/

@@ -15,7 +15,7 @@ const ProfilePage = () => {
     if (e.target.files && e.target.files[0]) {
       setSelectedImg(e.target.files[0]);
     }
-  };
+  }; 
 
   const profilePicSrc = selectedImg
     ? URL.createObjectURL(selectedImg)

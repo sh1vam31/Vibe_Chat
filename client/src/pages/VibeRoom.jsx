@@ -6,4 +6,4 @@ const VibeRoom = () => {
   )
 }
 
-export default VibeRoom
+export default VibeRoom 

@@ -22,7 +22,7 @@ const Sidebar = () => {
 
     useEffect(() => {
         getSocialData()
-    }, [onlineUsers])
+    }, [onlineUsers, getSocialData])
 
     return (
         <div className={`bg-[#8185B2]/20 h-full p-5 rounded-r-xl overflow-y-scroll text-white ${selectedUser? "max-md:hidden":'' } `}>
@@ -58,7 +58,7 @@ const Sidebar = () => {
                         </div>
                     </div>
                 </div>
-                <div className='bg-[#282142] rounded-full flex items-center gap-2 py-3 px-4 mt-5'>
+                <div className='bg-[#282142] rounded-full flex items-center gap-2 py-3 px-4 mt-5' >
                     <img src={assets.search_icon} alt="Search" className='w-3' />
                     <input onChange={(e)=>setInput(e.target.value)} type="text" className='bg-transparent border-none outline-none text-white text-xs placeholder:[#c8c8c8] flex-1 'placeholder='Search User...'  />
                 </div>
@@ -88,7 +88,7 @@ const Sidebar = () => {
                             className='w-[35px] aspect-[1/1] rounded-full transition-transform duration-300 hover:scale-110'
                         />    
                         <div className='flex flex-col leading-5'>
-                            <p className="font-medium hover:text-purple-400 transition-colors">{user.fullName}</p>
+                            <p className="font-medium hover:text-purple-400 transition-colors justify-center">{user.fullName}</p>
                             <span className={`text-xs transition-colors duration-300 ${
                                 onlineUsers.includes(user._id) 
                                     ? 'text-green-400' 

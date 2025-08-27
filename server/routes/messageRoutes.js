@@ -10,4 +10,4 @@ messageRouter.get("/mark/:id", protectRoute, markMessageAsSeen);
 messageRouter.post("/send/:id", protectRoute, sendMessage);
 messageRouter.delete("/:messageId", protectRoute, deleteMessage); // Verify this route exists
 
-export default messageRouter;
+export default messageRouter; 

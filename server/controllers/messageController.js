@@ -106,7 +106,7 @@ export const sendMessage = async (req,res)=>{
 export const deleteMessage = async (req, res) => {
     try {
         const { messageId } = req.params;
-        const { deleteFor } = req.body; // Changed from req.query to req.body
+        const { deleteFor } = req.body;
         const userId = req.user._id;
 
         console.log('Delete params:', { messageId, deleteFor, userId }); // Debug log
@@ -117,7 +117,7 @@ export const deleteMessage = async (req, res) => {
             return res.status(404).json({ success: false, message: "Message not found" });
         }
 
-        if (deleteFor === 'everyone') {
+        if (deleteFor === 'everyone') { 
             if (message.senderId.toString() !== userId.toString()) {
                 return res.status(403).json({ success: false, message: "Unauthorized" });
             }

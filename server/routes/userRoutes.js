@@ -13,4 +13,4 @@ userRouter.post("/friend-request", protectRoute, sendFriendRequest);
 userRouter.post("/friend-request/accept", protectRoute, acceptFriendRequest);
 userRouter.post("/friend-request/reject", protectRoute, rejectFriendRequest);
 
-export default userRouter
+export default userRouter 

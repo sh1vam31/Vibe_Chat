@@ -12,7 +12,7 @@ const navItems = [
 const TopNavBar = () => {
   const navigate = useNavigate();
 
-  return (
+  return ( 
     <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 flex gap-4">
       {navItems.map((item, idx) => (
         <div

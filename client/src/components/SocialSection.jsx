@@ -8,8 +8,8 @@ const SocialSection = () => {
   const {
     allUsers, friends, sentRequests, receivedRequests, getSocialData
   } = useContext(ChatContext);
-  const { axios, authUser } = useContext(AuthContext);
-
+  const { axios } = useContext(AuthContext);
+ 
   const [loadingId, setLoadingId] = useState(null);
   const [search, setSearch] = useState("");
 
@@ -40,7 +40,7 @@ const SocialSection = () => {
         else toast.error(data.message);
       }
       await getSocialData();
-    } catch (err) {
+    } catch {
       toast.error("Action failed");
     }
     setLoadingId(null);
